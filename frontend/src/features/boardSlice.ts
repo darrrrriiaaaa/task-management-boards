@@ -28,6 +28,16 @@ export const createBoard = createAsyncThunk("boards/createBoard", async (data: {
     return response.data;
 })
 
+export const updateBoard = createAsyncThunk("boards/updateBoard", async ({id, data}: {id: string, data: Partial<Board>}) => {
+    const response = await axios.patch(`http://localhost:5000/api/boards/${id}`, data);
+    return response.data;
+});
+
+export const deleteBoard = createAsyncThunk("board/deleteBoard", async (id: string) => {
+    await axios.delete(`http://localhost:5000/api/boards/${id}`);
+    return id;
+})
+
 const boardSlice = createSlice({
     name: "boards",
     initialState,
@@ -51,6 +61,15 @@ const boardSlice = createSlice({
         })
         .addCase(createBoard.fulfilled, (state, action: PayloadAction<Board>) => {
             state.boards.push(action.payload);
+        })
+        .addCase(updateBoard.fulfilled, (state, action: PayloadAction<Board>) => {
+            const index = state.boards.findIndex((b) => b._id === action.payload._id);
+            if (index !== -1) state.boards[index] = action.payload;
+            if (state.currentBoard?._id === action.payload._id) state.currentBoard = action.payload;
+        })
+        .addCase(deleteBoard.fulfilled, (state, action: PayloadAction<String>) => {
+            state.boards = state.boards.filter((b) => b._id !== action.payload);
+            if (state.currentBoard?._id === action.payload) state.currentBoard = null;
         })
     }
 });

@@ -13,7 +13,7 @@ import { useParams } from "react-router-dom";
 import { setCurrentBoard } from "../features/boardSlice.ts";
 
 import ActionsCard from "../components/ActionsCard.tsx";
-import AddColumn from "../components/ActionsColumn.tsx";
+import ActionsColumn from "../components/ActionsColumn.tsx";
 
 const BoardPage: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -66,7 +66,7 @@ const BoardPage: React.FC = () => {
     const ColumnWrapper: React.FC<{column: Column; children: React.ReactNode}> = ({column, children}) => {
         const {setNodeRef, isOver} = droppableColumns(column._id);
         return(
-            <div ref={setNodeRef}>{children}</div>
+            <div ref={setNodeRef} className={`min-w-[250px] rounded-xl shadow-md flex flex-col gap-3 transition ${isOver ? "ring-2 ring-emerald-500" : ""}`}>{children}</div>
         );
     };
 
@@ -94,24 +94,25 @@ const BoardPage: React.FC = () => {
     if (!currentBoard) return <p>Board not found!</p>
 
     return (
-        <div>
-            <h3>{currentBoard.name}</h3>
+        <div className="flex flex-col h-full">
+            <h3 className="text-2xl font-semibold mb-6">{currentBoard.name}</h3>
             <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                <div>
+                <div className="flex items-start gap-6 overflow-x-auto pb-4">
                 {columns.map((col: Column) => {
                     const columnCards = cards.filter((c) => c.columnId === col._id);
                     return (
-                        <div key={col._id}>
-                        <h4>{col.title}</h4>
+                        <div key={col._id} className="min-w-[250px]">
+                        <h4 className="text-lg font-semibold mb-2 flex justify-center">{col.title}</h4>
                         <ColumnWrapper column={col}>
+                            <ActionsColumn key={col._id} boardId={currentBoard._id} column={col} />
                             <SortableContext items={columnCards.map(c => c._id)} strategy={verticalListSortingStrategy} id={col._id}>
-                                <div data-droppable-id={col._id}>
+                                <div data-droppable-id={col._id} className="flex flex-col gap-3">
                                     {columnCards.length > 0 ? (
                                         columnCards.map((card) => (
                                             <ActionsCard key={card._id} columnId={col._id} card={card} />
                                         ))
                                     ) : (
-                                        <div>Drop here</div>
+                                        <div className="text-sm text-gray-500">Drop here</div>
                                     )}
                                 </div>
                                 <ActionsCard columnId={col._id} key={`new-${col._id}`}/>
@@ -120,9 +121,11 @@ const BoardPage: React.FC = () => {
                         </div>
                     )
                 })}
+                <div className="self-start">
+                    <ActionsColumn boardId={currentBoard._id} />
+                </div>
                 </div>
             </DndContext>
-            <AddColumn boardId={currentBoard._id} />
         </div>
     )
 }
